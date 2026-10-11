@@ -1,0 +1,17 @@
+# Binaries and build artifacts
+build/
+*.exe
+*.o
+*.obj
+*.out
+*.dll
+*.so
+*.dylib
+
+# Cache and temp files
+__pycache__/
+*.pyc
+*.pyo
+.cache/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,76 @@
+<svg fill="none" viewBox="0 0 900 240" width="100%" height="240" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="glow-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="glow-green" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="glow-red" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f43f5e" />
+      <stop offset="100%" stop-color="#e11d48" />
+    </linearGradient>
+    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="900" height="240" rx="14" fill="url(#grad-bg)" stroke="#1f2937" stroke-width="2"/>
+
+  <!-- Animated connecting circuits -->
+  <path d="M 180 120 L 330 120" stroke="#374151" stroke-width="3" stroke-dasharray="6,6"/>
+  <path d="M 470 120 L 620 120" stroke="#374151" stroke-width="3" stroke-dasharray="6,6"/>
+  
+  <!-- Curved feedback loop from Healer back to Protected Execution -->
+  <path d="M 720 160 C 720 215, 380 215, 380 160" stroke="url(#glow-cyan)" stroke-width="2.5" fill="none" stroke-dasharray="8,4">
+    <animate attributeName="stroke-dashoffset" values="40;0" dur="2s" repeatCount="indefinite" />
+  </path>
+
+  <!-- Pulsing Flow Indicator -->
+  <circle r="4" fill="#38bdf8" filter="url(#neon-glow)">
+    <animateMotion path="M 180 120 L 330 120" dur="2.5s" repeatCount="indefinite" />
+  </circle>
+  <circle r="4" fill="#f43f5e" filter="url(#neon-glow)">
+    <animateMotion path="M 470 120 L 620 120" dur="2.5s" repeatCount="indefinite" />
+  </circle>
+
+  <!-- Node 1: Compiler & Synthesis -->
+  <g transform="translate(60, 65)">
+    <rect width="140" height="110" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.8"/>
+    <text x="70" y="32" fill="#38bdf8" font-family="-apple-system, sans-serif" font-weight="700" font-size="12" text-anchor="middle">BUILD TIME</text>
+    <text x="70" y="52" fill="#f8fafc" font-family="-apple-system, sans-serif" font-weight="600" font-size="13" text-anchor="middle">SHC Compiler</text>
+    <text x="70" y="74" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10" text-anchor="middle">Shadow-Stack Pass</text>
+    <text x="70" y="90" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10" text-anchor="middle">Multi-Variant Gen</text>
+  </g>
+
+  <!-- Node 2: Monitored Execution -->
+  <g transform="translate(330, 65)">
+    <rect width="160" height="110" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="1.8"/>
+    <text x="80" y="32" fill="#10b981" font-family="-apple-system, sans-serif" font-weight="700" font-size="12" text-anchor="middle">RUNTIME MONITOR</text>
+    <text x="80" y="52" fill="#f8fafc" font-family="-apple-system, sans-serif" font-weight="600" font-size="13" text-anchor="middle">Protected Binary</text>
+    <text x="80" y="74" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10" text-anchor="middle">Active Bounds Verification</text>
+    <text x="80" y="90" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10" text-anchor="middle">Forward CFI Tracking</text>
+  </g>
+
+  <!-- Node 3: Autonomous Mitigation Engine -->
+  <g transform="translate(620, 65)">
+    <rect width="180" height="110" rx="10" fill="#1e293b" stroke="#f43f5e" stroke-width="1.8"/>
+    <text x="90" y="32" fill="#f43f5e" font-family="-apple-system, sans-serif" font-weight="700" font-size="12" text-anchor="middle">SELF-HEALING</text>
+    <text x="90" y="52" fill="#f8fafc" font-family="-apple-system, sans-serif" font-weight="600" font-size="13" text-anchor="middle">Mitigation Engine</text>
+    <text x="90" y="74" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="10" text-anchor="middle">Re-Randomize Stack</text>
+    <text x="90" y="90" fill="#a7f3d0" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" text-anchor="middle">&#x26A1; MTTM: 4.2 &#181;s Hot-Patch</text>
+  </g>
+
+  <!-- Closed-loop label -->
+  <text x="540" y="210" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Closed-Loop Autonomous Healing: Zero Downtime (0 ms Crash)</text>
+</svg>

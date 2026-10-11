@@ -1,0 +1,113 @@
+<svg fill="none" viewBox="0 0 850 480" width="100%" height="480" xmlns="http://www.w3.org/2000/svg">
+  <foreignObject width="100%" height="100%">
+    <div xmlns="http://www.w3.org/1999/xhtml">
+      <style>
+        .terminal-container {
+          background: #0d1117;
+          border-radius: 12px;
+          border: 1px solid #30363d;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 139, 253, 0.15);
+          font-family: 'Fira Code', 'JetBrains Mono', 'Courier New', monospace;
+          color: #c9d1d9;
+          padding: 0;
+          overflow: hidden;
+          width: 846px;
+          height: 476px;
+          box-sizing: border-box;
+        }
+        .terminal-header {
+          background: #161b22;
+          padding: 10px 16px;
+          display: flex;
+          align-items: center;
+          border-bottom: 1px solid #30363d;
+        }
+        .window-buttons {
+          display: flex;
+          gap: 8px;
+        }
+        .btn {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+        .btn-red { background: #ff5f56; }
+        .btn-yellow { background: #ffbd2e; }
+        .btn-green { background: #27c93f; }
+        .title {
+          flex: 1;
+          text-align: center;
+          font-size: 13px;
+          color: #8b949e;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+        }
+        .terminal-body {
+          padding: 18px 22px;
+          font-size: 13.5px;
+          line-height: 1.6;
+        }
+        .cmd-line {
+          color: #58a6ff;
+          font-weight: bold;
+        }
+        .prompt { color: #2ea043; }
+        .accent { color: #f0883e; }
+        .alert { color: #ff7b72; font-weight: bold; }
+        .heal { color: #7ee787; font-weight: bold; }
+        .cyan { color: #79c0ff; }
+        .dim { color: #6e7681; }
+
+        /* Keyframe Staggered Animations */
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { text-shadow: 0 0 4px #7ee787; }
+          50% { text-shadow: 0 0 16px #7ee787, 0 0 24px #2ea043; }
+        }
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+
+        .line1 { animation: fadeIn 0.5s ease forwards 0.2s; opacity: 0; }
+        .line2 { animation: fadeIn 0.5s ease forwards 0.9s; opacity: 0; }
+        .line3 { animation: fadeIn 0.5s ease forwards 1.7s; opacity: 0; }
+        .line4 { animation: fadeIn 0.5s ease forwards 2.6s; opacity: 0; }
+        .line5 { animation: fadeIn 0.5s ease forwards 3.4s; opacity: 0; }
+        .line6 { animation: fadeIn 0.5s ease forwards 4.2s; opacity: 0; }
+        .line7 { animation: fadeIn 0.5s ease forwards 5.0s; opacity: 0; }
+        .line8 { animation: fadeIn 0.5s ease forwards 5.8s; opacity: 0; }
+        .line9 { animation: fadeIn 0.5s ease forwards 6.5s; opacity: 0; }
+        
+        .pulse-text { animation: pulseGlow 2s infinite ease-in-out; }
+        .cursor { display: inline-block; width: 8px; height: 16px; background: #58a6ff; vertical-align: middle; animation: blink 1s infinite; }
+      </style>
+      
+      <div class="terminal-container">
+        <div class="terminal-header">
+          <div class="window-buttons">
+            <span class="btn btn-red"></span>
+            <span class="btn btn-yellow"></span>
+            <span class="btn btn-green"></span>
+          </div>
+          <div class="title">shc-runtime@daemon: ~/self_healing_compiler</div>
+        </div>
+        <div class="terminal-body">
+          <div class="line1 cmd-line"><span class="prompt">user@vit-lab:~$</span> python eval/run_experiments.py --live-monitor</div>
+          <div class="line2 dim">[SHC Core] Initializing Self-Healing Compiler Runtime v1.0.0 (AOT Native)</div>
+          <div class="line3 dim">[SHC Pass] Injected Shadow-Stack, Bounds Probes &amp; Multi-Variant Hot-Trampolines</div>
+          <div class="line4">[Server] Handling client traffic... Requests #01 - #09 <span class="heal">&#x2714; OK (200)</span></div>
+          <div class="line5 alert">[Server] Request #10: &gt;&gt; DETECTED BUFFER OVERFLOW EXPLOIT PAYLOAD (180B) &lt;&lt;</div>
+          <div class="line6"><span class="accent">[SHC DETECT]</span> <span class="alert">Shadow-Stack Mismatch! Target Ret-Addr Hijacked!</span></div>
+          <div class="line7"><span class="cyan">[SHC HEALER]</span> Splicing Pre-Synthesized Guarded Trampoline... <span class="heal pulse-text">HOT-PATCH APPLIED</span></div>
+          <div class="line8"><span class="cyan">[SHC TELEMETRY]</span> <span class="heal">&#x26A1; Detect-to-Heal Latency (MTTM): 4.200 microseconds</span></div>
+          <div class="line9">[Server] Requests #11 - #20: <span class="heal">&#x2714; OK (100% Service Availability - 0 Crashes)</span> <span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </foreignObject>
+</svg>
