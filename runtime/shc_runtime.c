@@ -192,6 +192,57 @@ bool shc_probe_bounds(void* target_ptr, void* base_ptr, size_t size, size_t acce
     return true;
 }
 
+shc_status_t shc_safe_strcpy(char* dst, size_t dst_capacity, const char* src) {
+    g_telemetry.total_probes_executed++;
+    if (!dst || !src) {
+        fprintf(stderr, "[SHC RUNTIME DETECTION] Rejecting copy: NULL pointer provided.\n");
+        return SHC_ERR_NULL_POINTER;
+    }
+    if (dst_capacity == 0) {
+        g_telemetry.bounds_checks_failed++;
+        g_telemetry.anomalies_detected++;
+        fprintf(stderr, "[SHC RUNTIME DETECTION] Bounds violation! Destination capacity is 0.\n");
+        return SHC_ERR_OVERFLOW;
+    }
+
+    size_t src_len = strlen(src);
+    /* dst needs space for src_len characters + null terminator */
+    if (src_len + 1 > dst_capacity) {
+        g_telemetry.bounds_checks_failed++;
+        g_telemetry.anomalies_detected++;
+        fprintf(stderr, "[SHC RUNTIME DETECTION] Memory Bounds Violation Detected!\n");
+        fprintf(stderr, "  Reason: Source length (%zu + 1 null byte = %zu bytes) exceeds destination buffer capacity (%zu bytes).\n",
+                src_len, src_len + 1, dst_capacity);
+        fprintf(stderr, "  Action: Operation rejected before copy. Memory preserved without out-of-bounds write.\n");
+        return SHC_ERR_OVERFLOW;
+    }
+
+    memcpy(dst, src, src_len + 1);
+    g_telemetry.bounds_checks_passed++;
+    return SHC_SUCCESS;
+}
+
+shc_status_t shc_safe_memcpy(void* dst, size_t dst_capacity, const void* src, size_t count) {
+    g_telemetry.total_probes_executed++;
+    if (!dst || !src) {
+        fprintf(stderr, "[SHC RUNTIME DETECTION] Rejecting copy: NULL pointer provided.\n");
+        return SHC_ERR_NULL_POINTER;
+    }
+    if (count > dst_capacity) {
+        g_telemetry.bounds_checks_failed++;
+        g_telemetry.anomalies_detected++;
+        fprintf(stderr, "[SHC RUNTIME DETECTION] Memory Bounds Violation Detected!\n");
+        fprintf(stderr, "  Reason: Requested copy count (%zu bytes) exceeds destination buffer capacity (%zu bytes).\n",
+                count, dst_capacity);
+        fprintf(stderr, "  Action: Operation rejected before copy. Memory preserved without out-of-bounds write.\n");
+        return SHC_ERR_OVERFLOW;
+    }
+
+    memcpy(dst, src, count);
+    g_telemetry.bounds_checks_passed++;
+    return SHC_SUCCESS;
+}
+
 void shc_register_cfi_target(uint32_t callsite_id, void* valid_target) {
     for (size_t i = 0; i < g_cfi_callsite_count; ++i) {
         if (g_cfi_table[i].callsite_id == callsite_id) {

@@ -1,14 +1,27 @@
 #!/usr/bin/env python3
 """
 ==============================================================================
-Self-Healing Compiler (SHC) - Source Instrumentation & Multi-Variant Generator
+Self-Healing Compiler (SHC) - Source Instrumentation Pass (Milestone 1)
 BCSE307P: Compiler Design Lab Project
 Authors: Sarang Raj (24BDS0091), Antony Roy (24BCE0920), Dev Raj (24BDS0080)
 ==============================================================================
 Description:
-  Automated compiler pass that analyzes C functions, inserts lightweight
-  monitoring probes (Shadow-Stack, Bounds-Check, CFI), and pre-synthesizes
-  multi-variant patches (Baseline, Re-randomized Layout, Guarded Trampoline).
+  Demonstrable C source instrumentation pass that detects raw, unsafe buffer
+  copy operations (e.g., strcpy(dest, src)) and instruments/transforms them
+  into checked runtime calls (shc_safe_strcpy(dest, sizeof(dest), src)).
+
+Supported C Subset & Scope for Milestone 1:
+  - Detects fixed-size array declarations of form: char <buf_name>[<size>];
+  - Detects standard string copy calls: strcpy(<buf_name>, <src>);
+  - Rewrites them to: shc_safe_strcpy(<buf_name>, sizeof(<buf_name>), <src>);
+  - Injects #include "shc_runtime.h" header if missing.
+
+Documented Limitations (Milestone 1 Prototype):
+  - Does not replace a full C AST parser or LLVM IR pass.
+  - Dynamically allocated buffers (malloc/free) require bounds registration tables
+    (scheduled for Milestone 2).
+  - Pointers passed across compilation units without explicit size attributes
+    require fat-pointer or shadow-memory metadata (Milestone 2).
 ==============================================================================
 """
 
@@ -16,73 +29,98 @@ import sys
 import os
 import re
 
-def instrument_c_source(source_code, output_path):
+def instrument_c_source(source_code):
     """
-    Transforms C code to inject SHC runtime probes, pre-synthesize function
-    variants, and build dynamic hot-patching dispatch trampolines.
+    Scans C code for known buffer declarations and transforms unsafe strcpy
+    calls targeting those buffers into shc_safe_strcpy calls with bounds checking.
+    
+    Returns:
+        transformed_code (str)
+        num_transformations (int)
+        transformation_log (list of str)
     """
+    log = []
     
-    header = """/* ========================================================================== */
-/* Auto-instrumented by Self-Healing Compiler (SHC) Pass                      */
-/* BCSE307P - Compiler Design Lab Project                                     */
-/* ========================================================================== */
-#include "shc_runtime.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+    # 1. Discover local fixed-size array buffers: e.g. char my_buf[32];
+    buffer_decl_pattern = re.compile(r'\bchar\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\[\s*([a-zA-Z0-9_+*\s]+)\s*\]\s*;')
+    buffers_found = {}
+    for match in buffer_decl_pattern.finditer(source_code):
+        buf_name = match.group(1)
+        buf_size = match.group(2).strip()
+        buffers_found[buf_name] = buf_size
+        log.append(f"Discovered bounded buffer: char {buf_name}[{buf_size}]")
 
-"""
+    transformed_code = source_code
+    num_transformations = 0
 
-    # Look for functions tagged with @shc_protect or matching signature pattern
-    # e.g.: int handle_request(const char* input, int length)
-    # or functions defined in target benchmark files
-    func_regex = re.compile(
-        r'(/\*[\s\S]*?\*/\s*)?'
-        r'((?:int|void|char\*|size_t)\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\))\s*\{'
-    )
+    # 2. Transform strcpy(dst, src) -> shc_safe_strcpy(dst, sizeof(dst), src)
+    # Match strcpy( <dst> , <src> )
+    strcpy_pattern = re.compile(r'\bstrcpy\s*\(\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*,\s*([^)]+?)\s*\)\s*;')
 
-    # We will identify functions to protect (excluding main)
-    functions = []
-    
-    for match in func_regex.finditer(source_code):
-        full_match = match.group(0)
-        return_and_name = match.group(2)
-        func_name = match.group(3)
-        params = match.group(4)
-        if func_name in ("main", "init_timer", "get_time_us", "shc_runtime_init", "shc_runtime_shutdown"):
-            continue
-        functions.append({
-            "name": func_name,
-            "signature": return_and_name,
-            "params": params,
-            "start": match.start(),
-            "body_start": match.end()
-        })
+    def replace_strcpy(match):
+        nonlocal num_transformations
+        dst = match.group(1).strip()
+        src = match.group(2).strip()
+        
+        num_transformations += 1
+        replacement = f"shc_safe_strcpy({dst}, sizeof({dst}), {src});"
+        log.append(f"Transformed: strcpy({dst}, {src}) -> {replacement}")
+        return replacement
 
-    # Prepare instrumented output
-    transformed_code = header
-    
-    # We include original includes and globals up to first function
-    transformed_code += source_code
+    transformed_code = strcpy_pattern.sub(replace_strcpy, transformed_code)
 
-    with open(output_path, "w") as f:
-        f.write(transformed_code)
+    # 3. Ensure shc_runtime.h is included if we performed any transformations
+    if num_transformations > 0 and 'shc_runtime.h' not in transformed_code:
+        header = '#include "shc_runtime.h"\n'
+        transformed_code = header + transformed_code
+        log.append('Injected: #include "shc_runtime.h"')
 
-    return len(functions)
+    return transformed_code, num_transformations, log
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: python shc_instrument.py <input.c> -o <output_instrumented.c>")
-        sys.exit(1)
-        
+    if len(sys.argv) < 2 or "-h" in sys.argv or "--help" in sys.argv:
+        print("Self-Healing Compiler (SHC) - Source Instrumentation Pass v0.25 (Milestone 1)")
+        print("Usage: python shc_instrument.py <input.c> [-o <output_instrumented.c>] [--info]")
+        print("\nSupported Transformations:")
+        print("  - strcpy(buf, src) -> shc_safe_strcpy(buf, sizeof(buf), src)")
+        print("  - Automatic injection of shc_runtime.h")
+        sys.exit(0)
+
     input_file = sys.argv[1]
-    output_file = sys.argv[3] if len(sys.argv) >= 4 and sys.argv[2] == "-o" else "instrumented_" + os.path.basename(input_file)
-    
-    with open(input_file, "r") as f:
+    if not os.path.exists(input_file):
+        print(f"[SHC Instrumentation Error] Input file not found: {input_file}", file=sys.stderr)
+        sys.exit(1)
+
+    output_file = None
+    show_info = False
+
+    i = 2
+    while i < len(sys.argv):
+        if sys.argv[i] == "-o" and i + 1 < len(sys.argv):
+            output_file = sys.argv[i + 1]
+            i += 2
+        elif sys.argv[i] == "--info":
+            show_info = True
+            i += 1
+        else:
+            i += 1
+
+    if not output_file:
+        base, ext = os.path.splitext(input_file)
+        output_file = f"{base}_instrumented{ext}"
+
+    with open(input_file, "r", encoding="utf-8") as f:
         src = f.read()
-        
-    count = instrument_c_source(src, output_file)
-    print(f"[SHC Compiler Pass] Processed {input_file} -> {output_file} (Found {count} candidate functions)")
+
+    transformed, count, log = instrument_c_source(src)
+
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write(transformed)
+
+    print(f"[SHC Instrumentation Pass] Processed: {input_file} -> {output_file}")
+    print(f"[SHC Instrumentation Pass] Applied {count} security transformations.")
+    for entry in log:
+        print(f"  * {entry}")
 
 if __name__ == "__main__":
     main()

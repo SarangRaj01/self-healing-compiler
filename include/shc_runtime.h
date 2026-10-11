@@ -38,6 +38,14 @@ typedef enum {
     SHC_ANOMALY_INTEGER_UNDERFLOW     = 5
 } shc_anomaly_type_t;
 
+/* Status codes for checked operations */
+typedef enum {
+    SHC_SUCCESS             = 0,
+    SHC_ERR_OVERFLOW        = -1,
+    SHC_ERR_NULL_POINTER    = -2,
+    SHC_ERR_INVALID_PARAM   = -3
+} shc_status_t;
+
 /* Active Mitigation Countermeasures */
 typedef enum {
     SHC_MITIGATION_NONE                 = 0,
@@ -129,6 +137,20 @@ bool shc_probe_cfi(uint32_t callsite_id, void* target_func_ptr);
  * Register a valid target for an indirect callsite.
  */
 void shc_register_cfi_target(uint32_t callsite_id, void* valid_target);
+
+/**
+ * Checked buffer-copy operation: verifies destination capacity before copying.
+ * Safe replacement for strcpy/strncpy with runtime bounds tracking.
+ * Returns SHC_SUCCESS if copied safely, SHC_ERR_OVERFLOW if source exceeds dst_capacity.
+ */
+shc_status_t shc_safe_strcpy(char* dst, size_t dst_capacity, const char* src);
+
+/**
+ * Checked memory-copy operation: verifies destination capacity before copying.
+ * Safe replacement for memcpy.
+ * Returns SHC_SUCCESS if copied safely, SHC_ERR_OVERFLOW if count exceeds dst_capacity.
+ */
+shc_status_t shc_safe_memcpy(void* dst, size_t dst_capacity, const void* src, size_t count);
 
 /* --------------------------------------------------------------------------
  * Self-Healing Mitigation Engine Interface
